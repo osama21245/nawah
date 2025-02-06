@@ -41,14 +41,14 @@ Future<Either<Failure, T>> executeTryAndCatchForRepository<T>(
 
 Future<T> executeTryAndCatchForDataLayer<T>(Future<T> Function() action) async {
   try {
-    var check = await Connectivity().checkConnectivity();
+    // var check = await Connectivity().checkConnectivity();
 
-    if (check == ConnectivityResult.mobile ||
-        check == ConnectivityResult.wifi) {
-      return await action();
-    } else {
-      throw NoInternetException();
-    }
+    // if (check == ConnectivityResult.mobile ||
+    //     check == ConnectivityResult.wifi) {
+    return await action();
+    // } else {
+    //   throw NoInternetException();
+    // }
   } on DioException catch (e) {
     throw Exception(_handleDioError(e));
   } on TimeoutException catch (e) {

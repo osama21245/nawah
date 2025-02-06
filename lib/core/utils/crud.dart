@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:http/http.dart' as http;
 
-
 String _basicAuth = 'Basic ${base64Encode(utf8.encode("osama:osama1234"))}';
 
 Map<String, String> myheaders = {'authorization': _basicAuth};
@@ -17,12 +16,11 @@ class Crud {
   Future<Map> postData(String link, Map<String, dynamic> data) async {
     int maxretry = 0;
     try {
-      // Making a POST request using Dio
       var response = await dio.post(
         link,
         data: data,
         options: Options(
-          contentType: "application/x-www-form-urlencoded",
+          contentType: "application/json",
           sendTimeout: const Duration(seconds: 5),
           receiveTimeout: const Duration(seconds: 5),
         ),
@@ -32,11 +30,67 @@ class Crud {
       print('Response body: ${response.data}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        Map responseBody = jsonDecode(response.data);
-        print(responseBody);
-        return responseBody;
+        // If response.data is already a Map, return it directly
+        if (response.data is Map) {
+          return response.data;
+        }
+        // If it's a String, parse it
+        if (response.data is String) {
+          return jsonDecode(response.data);
+        }
+        throw const FormatException('Unexpected response format');
       } else {
-        // Handle the error based on the response code
+        throw DioException(
+          response: response,
+          requestOptions: response.requestOptions,
+        );
+      }
+    } on DioException catch (e) {
+      if (e.type == DioExceptionType.sendTimeout ||
+          e.type == DioExceptionType.receiveTimeout) {
+        print('Request timed out: ${e.message}');
+        throw "Request timed out";
+      } else if (e.type == DioExceptionType.connectionError) {
+        if (await _hasInternetAccess() && maxretry < 2) {
+          return postData(link, data);
+        } else {
+          throw "No Internet Connection";
+        }
+      } else {
+        throw e.message ?? "Unknown error";
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<Map> getData(String link, Map<String, dynamic> data) async {
+    int maxretry = 0;
+    try {
+      var response = await dio.get(
+        link,
+        data: data,
+        options: Options(
+          contentType: "application/json",
+          sendTimeout: const Duration(seconds: 5),
+          receiveTimeout: const Duration(seconds: 5),
+        ),
+      );
+
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.data}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        // If response.data is already a Map, return it directly
+        if (response.data is Map) {
+          return response.data;
+        }
+        // If it's a String, parse it
+        if (response.data is String) {
+          return jsonDecode(response.data);
+        }
+        throw const FormatException('Unexpected response format');
+      } else {
         throw DioException(
           response: response,
           requestOptions: response.requestOptions,

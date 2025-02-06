@@ -1,29 +1,41 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:nawah/core/utils/crud.dart';
+import 'package:nawah/features/quizzes/data/data_souce/quizzes_remote_data_souce.dart';
+import 'package:nawah/features/quizzes/data/repository/quizzes_repository.dart';
 import 'package:video_player/video_player.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
 
+import 'features/home/data/datasouce/home_remote_data_source.dart';
+import 'features/home/data/repository/home_repository.dart';
+import 'features/home/presentation/cubits/home/home_cubit.dart';
+import 'features/home/presentation/screens/home.dart';
+import 'features/quizzes/presentation/cubits/attend_quiz/attend_quiz_cubit.dart';
+import 'features/quizzes/presentation/screens/attend_quiz_screen.dart';
+
 void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Video Streaming App',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-        useMaterial3: true,
+  final dio = Dio();
+  runApp(MaterialApp(
+    home: MultiRepositoryProvider(
+      providers: [
+        RepositoryProvider.value(value: dio),
+      ],
+      child: BlocProvider(
+        create: (context) => HomeCubit(
+          HomeRepository(
+            remoteDataSource: HomeRemoteDataSourceImpl(
+              Crud(dio: dio),
+            ),
+          ),
+        )..getTeachers(),
+        child: const HomeScreen(),
       ),
-      home: const VideoPlayerScreen(),
-    );
-  }
+    ),
+  ));
 }
 
 class VideoPlayerScreen extends StatefulWidget {
