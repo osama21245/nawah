@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:nawah/core/utils/crud.dart';
+import 'package:nawah/features/dashboard/data/datasouce/home_remote_data_source.dart';
+import 'package:nawah/features/dashboard/data/repository/home_repository.dart';
+import 'package:nawah/features/dashboard/presentation/cubits/home/home_cubit.dart';
+import 'package:nawah/features/dashboard/presentation/screens/dashboard_screen.dart';
+import 'package:nawah/features/home/presentation/screens/homeScreen.dart';
 import 'package:nawah/features/quizzes/data/data_souce/quizzes_remote_data_souce.dart';
 import 'package:nawah/features/quizzes/data/repository/quizzes_repository.dart';
 import 'package:video_player/video_player.dart';
@@ -10,31 +16,35 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
 
-import 'features/home/data/datasouce/home_remote_data_source.dart';
-import 'features/home/data/repository/home_repository.dart';
-import 'features/home/presentation/cubits/home/home_cubit.dart';
-import 'features/home/presentation/screens/home.dart';
 import 'features/quizzes/presentation/cubits/attend_quiz/attend_quiz_cubit.dart';
 import 'features/quizzes/presentation/screens/attend_quiz_screen.dart';
 
 void main() {
   final dio = Dio();
-  runApp(MaterialApp(
-    home: MultiRepositoryProvider(
-      providers: [
-        RepositoryProvider.value(value: dio),
-      ],
-      child: BlocProvider(
-        create: (context) => HomeCubit(
-          HomeRepository(
-            remoteDataSource: HomeRemoteDataSourceImpl(
-              Crud(dio: dio),
-            ),
+  runApp(ScreenUtilInit(
+    designSize: const Size(440, 956),
+    minTextAdapt: true,
+    splitScreenMode: true,
+    builder: (context, child) {
+      return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: MultiRepositoryProvider(
+          providers: [
+            RepositoryProvider.value(value: dio),
+          ],
+          child: BlocProvider(
+            create: (context) => HomeCubit(
+              HomeRepository(
+                remoteDataSource: HomeRemoteDataSourceImpl(
+                  Crud(dio: dio),
+                ),
+              ),
+            )..getTeachers(),
+            child: Home(),
           ),
-        )..getTeachers(),
-        child: const HomeScreen(),
-      ),
-    ),
+        ),
+      );
+    },
   ));
 }
 
